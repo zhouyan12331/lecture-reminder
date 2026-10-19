@@ -1,0 +1,61 @@
+name: 讲座邮件提醒
+
+# GitHub 的 cron 用 **UTC**。北京时间 = UTC+8。
+# 这里只在 10/19、10/21、10/23、10/25 这四天每 30 分钟跑一次，
+# 「该不该发、发给哪一场」由 reminder/lectures.json 现算，
+# 并用 reminder/sent/ 下的标记文件保证同一场只发一次（GitHub 可能延迟触发）。
+on:
+  schedule:
+    - cron: '*/30 * 19,21,23,25 10 *'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: '填 1 就立刻发一封测试邮件（不写已发标记）'
+        required: false
+        default: ''
+
+# 避免两次运行同时抢着提交标记文件
+concurrency:
+  group: lecture-reminder
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # 提交已发送标记需要写权限
+    steps:
+      - name: 取出仓库
+        uses: actions/checkout@v4
+
+      - name: 装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 检查并发送
+        env:
+          # 非机密项直接写在这里，要改收发地址就改这两行
+          SMTP_HOST: smtp.163.com
+          SMTP_PORT: '465'
+          SMTP_SSL: '1'
+          SENDER: zhouyan12331@163.com
+          RECIPIENT: zhouyan12331@163.com
+          # 唯一需要配置的机密：163 的 SMTP 授权码
+          AUTH_CODE: ${{ secrets.MAIL_AUTH_CODE }}
+          LECTURE_TEST: ${{ github.event.inputs.test }}
+        run: python reminder/send.py
+
+      - name: 记录已发送标记
+        run: |
+          if [ -n "$(git status --porcelain reminder/sent)" ]; then
+            git config user.name  "lecture-reminder-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add reminder/sent
+            git commit -m "chore: 记录已发送的讲座提醒"
+            git push
+            echo "已提交发送标记"
+          else
+            echo "没有新的发送标记，跳过提交"
+          fi
