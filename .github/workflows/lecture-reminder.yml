@@ -1,7 +1,7 @@
 name: 讲座邮件提醒
 
 # 触发方式有两个：
-#   1) 外部准点触发（主力）：cron-job.org 每 5 分钟调一次 workflow_dispatch。
+#   1) 外部准点触发（主力）：cron-job.org 每 15 分钟调一次 workflow_dispatch。
 #      因为 GitHub 自己的 schedule 被限流得厉害——实测一天只跑 2~3 次，
 #      还常常错过提醒窗口，当闹钟用是指望不上的。
 #   2) GitHub schedule（备胎）：全天每 30 分钟。正常用不到它，

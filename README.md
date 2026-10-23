@@ -7,7 +7,7 @@
 触发有两条路，**主力是外部的 cron-job.org**：
 
 ```
-cron-job.org（每 5 分钟，准点）
+cron-job.org（每 15 分钟，准点）
    └─ POST GitHub 的 workflow_dispatch 接口
         └─ workflow 跑 reminder/send.py
              ├─ 判断：某场讲座的提醒时刻到了没？还在补发窗口内吗？
@@ -91,7 +91,7 @@ git push -u origin main
 
 3. 拉到底点 **Commit changes**。
 
-触发器每 5 分钟来问一次，所以提交后最长 5 分钟就生效，**不需要再做任何事**。
+触发器每 15 分钟来问一次，所以提交后最长 15 分钟就生效，**不需要再做任何事**。
 
 ## 已知边界
 
@@ -102,8 +102,10 @@ git push -u origin main
   （只授权本仓库 + Actions: write），再到 cron-job.org 把 `Authorization` 头换掉。
 - **cron-job.org 会自动停用**：按它 FAQ，连续失败 25 次会停用任务，所以务必开失败邮件通知；
   即便它挂了，GitHub 那条备胎定时还能兜一层。
-- **仓库是 public**：Actions 分钟数不限，每 5 分钟触发不花钱。`lectures.json` 公开无妨，
-  授权码在 Secrets 里不会泄露。
+- **触发间隔 15 分钟**：提醒会在目标时刻之后 15 分钟内到达，也就是讲座前 **45~60 分钟**。
+  想更贴近「整一小时」就到 cron-job.org 把间隔改成 5 分钟，代码和 workflow 都不用动。
+- **仓库是 public**：Actions 分钟数不限，每 15 分钟触发（约 96 次/天）不花钱。
+  `lectures.json` 公开无妨，授权码在 Secrets 里不会泄露。
 
 ## 本地那份还要不要留
 
