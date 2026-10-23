@@ -1,12 +1,17 @@
 name: 讲座邮件提醒
 
-# GitHub 的 cron 用 **UTC**。北京时间 = UTC+8。
-# 这里只在 10/19、10/21、10/23、10/25 这四天每 30 分钟跑一次，
-# 「该不该发、发给哪一场」由 reminder/lectures.json 现算，
-# 并用 reminder/sent/ 下的标记文件保证同一场只发一次（GitHub 可能延迟触发）。
+# 触发方式有两个：
+#   1) 外部准点触发（主力）：cron-job.org 每 5 分钟调一次 workflow_dispatch。
+#      因为 GitHub 自己的 schedule 被限流得厉害——实测一天只跑 2~3 次，
+#      还常常错过提醒窗口，当闹钟用是指望不上的。
+#   2) GitHub schedule（备胎）：全天每 30 分钟。正常用不到它，
+#      只在上面那个外部触发挂掉或被停用时兜一层。
+# 「该不该发、发给哪一场」每次都由 reminder/lectures.json 现算，
+# 并用 reminder/sent/ 下的标记文件保证同一场只发一次，所以多触发几次也不会重复发信。
+# 注意 GitHub 的 cron 用 UTC（北京时间 = UTC+8）。
 on:
   schedule:
-    - cron: '*/30 * 19,21,23,25 10 *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       test:
